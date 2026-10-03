@@ -12,7 +12,8 @@ import { MemoryMeter } from "@/components/problems/memory-meter";
 import { ForgettingDemo } from "@/components/landing/forgetting-demo";
 import { Reveal } from "@/components/landing/reveal";
 import { CompanyMarquee } from "@/components/landing/company-marquee";
-import { demoSeries } from "@/lib/srs/demo";
+import { demoSeries, memoryLab } from "@/lib/srs/demo";
+import { MemoryLab } from "@/components/landing/memory-lab";
 import { curve, previewIntervals, schedule, Rating } from "@/lib/srs/fsrs";
 import { formatInterval, formatNumber } from "@/lib/format";
 
@@ -23,6 +24,7 @@ export default async function LandingPage() {
     db.select({ name: companies.name, total: companies.problemCount }).from(companies).orderBy(desc(companies.problemCount)).limit(28),
   ]);
   const demo = demoSeries(60);
+  const lab = memoryLab();
 
   // Recall of each topic four weeks into a month of study, solved once and never revisited.
   const firstStability = schedule(null, new Date("2026-01-01"), Rating.Good).card.stability;
@@ -45,9 +47,12 @@ export default async function LandingPage() {
           <Link href="/" aria-label="Recode home">
             <Logo />
           </Link>
-          <div className="hidden items-center gap-6 text-[13.5px] text-ink-subtle md:flex">
+          <div className="hidden items-center gap-6 text-[13.5px] text-ink-subtle lg:flex">
             <a href="#how" className="hover:text-ink">
               How it works
+            </a>
+            <a href="#model" className="hover:text-ink">
+              Memory model
             </a>
             <a href="#science" className="hover:text-ink">
               Science
@@ -146,9 +151,9 @@ export default async function LandingPage() {
             <h2 className="text-[32px] leading-[1.12] font-semibold tracking-[-0.03em] sm:text-[38px]">Solve once. Re-solve on cue.</h2>
             <ol className="mt-10 flex flex-col gap-8">
               {[
-                ["Solve on LeetCode", "Pick from NeetCode 150, Blind 75 or any of 464 company lists. Solve it where you always do."],
-                ["Tick it and rate it", "Say how it went and write the one-line insight that cracked it. That note becomes your hint later."],
-                ["Come back when it fades", "Today lists what is about to slip below 90% recall. Each clean re-solve pushes the next one further out."],
+                ["Encode", "Solve it on LeetCode, from NeetCode 150, Blind 75 or any of 464 company lists. Tick it here and the model starts tracking that memory."],
+                ["Elaborate", "Rate how it went and write the one-line insight that cracked it. Explaining the key idea in your own words makes it easier to retrieve later."],
+                ["Retrieve on schedule", "When predicted recall drifts down to 90%, it appears in Today. You rebuild the solution from memory, and each success stretches the next gap."],
               ].map(([title, body], i) => (
                 <li key={title} className="flex gap-4">
                   <span className="mt-0.5 font-mono text-[13px] text-accent-text">{i + 1}</span>
@@ -233,6 +238,23 @@ export default async function LandingPage() {
                   ))}
                 </ol>
               </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Memory model walkthrough */}
+        <section id="model" className="border-t border-line bg-surface-1/30">
+          <div className="mx-auto max-w-[1200px] px-4 py-28 sm:px-8">
+            <Reveal>
+              <h2 className="max-w-[26ch] text-[32px] leading-[1.12] font-semibold tracking-[-0.03em] sm:text-[38px]">
+                Inside one memory, from first solve to long-term.
+              </h2>
+              <p className="mt-4 max-w-[60ch] text-[15.5px] leading-relaxed text-ink-subtle">
+                Recode models every problem you solve with three numbers. Step through the life of one problem and watch them change, with the same model the scheduler runs.
+              </p>
+            </Reveal>
+            <Reveal delay={0.05} className="mt-12">
+              <MemoryLab data={lab} />
             </Reveal>
           </div>
         </section>
