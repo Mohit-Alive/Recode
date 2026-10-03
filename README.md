@@ -22,11 +22,17 @@ Tailwind v4 · Motion · Resend + Vercel Cron.
    `user.updated` and `user.deleted`, and set `CLERK_WEBHOOK_SIGNING_SECRET`.
 5. **Run**: `pnpm dev`
 
-### Reminders (optional)
-Set `RESEND_API_KEY`, `EMAIL_FROM` and `CRON_SECRET`. `vercel.json` schedules
-`/api/cron/reminders` hourly; it emails each user at their chosen local hour on days with reviews
-due. Hourly crons need a Vercel Pro plan; on Hobby, change the schedule to once a day.
-Test locally: `curl -H "Authorization: Bearer $CRON_SECRET" "localhost:3000/api/cron/reminders?force=1"`.
+### Reminders (optional, off by default)
+The reminder email route exists at `/api/cron/reminders` but is not scheduled. To enable it, set
+`RESEND_API_KEY`, `EMAIL_FROM` and `CRON_SECRET`, then add a `vercel.json`:
+
+```json
+{ "crons": [{ "path": "/api/cron/reminders", "schedule": "0 13 * * *" }] }
+```
+
+Vercel Hobby allows one run per day (the schedule is in UTC), so every user gets the email at that
+hour. On Pro, use `"0 * * * *"` to send at each user's chosen local hour. Test locally with
+`curl -H "Authorization: Bearer $CRON_SECRET" "localhost:3000/api/cron/reminders?force=1"`.
 
 ## How scheduling works
 - **FSRS-6** (`src/lib/srs/fsrs.ts`): one memory card per (user, problem), day granularity, fuzz on,
