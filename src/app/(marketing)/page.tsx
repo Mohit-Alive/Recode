@@ -84,8 +84,8 @@ export default async function LandingPage() {
 
       <main id="main">
         {/* Hero: split, copy left, live model right */}
-        <section className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pt-14 pb-20 sm:px-8 md:pt-20 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[1fr_1.1fr] lg:pt-12">
-          <div>
+        <section className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-4 pt-14 pb-20 sm:px-8 md:pt-20 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:pt-12">
+          <div className="min-w-0">
             <h1 className="text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] text-ink sm:text-[52px] lg:text-[58px]">
               You solved it.
               <br />
@@ -105,7 +105,7 @@ export default async function LandingPage() {
               </Button>
             </div>
           </div>
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} className="min-w-0">
             <ForgettingDemo without={demo.without} withReviews={demo.withReviews} days={demo.days} />
           </Reveal>
         </section>

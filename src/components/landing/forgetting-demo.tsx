@@ -23,7 +23,7 @@ export function ForgettingDemo({ without, withReviews, days }: { without: Series
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => setWidth(Math.max(280, Math.round(e.contentRect.width))));
+    const ro = new ResizeObserver(([e]) => setWidth(Math.max(220, Math.round(e.contentRect.width))));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -73,16 +73,15 @@ export function ForgettingDemo({ without, withReviews, days }: { without: Series
 
       <div ref={wrap} className="relative mt-4">
         <svg
-          width={width}
-          height={H}
+          viewBox={`0 0 ${width} ${H}`}
           role="img"
           aria-label={`Recall of one problem over ${days} days, ${mode === "with" ? "with spaced reviews" : "solved once and never reviewed"}. Ends at ${Math.round(end * 100)} percent.`}
           onPointerMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
-            setHover(Math.max(PAD.left, Math.min(PAD.left + innerW, e.clientX - rect.left)));
+            setHover(Math.max(PAD.left, Math.min(PAD.left + innerW, ((e.clientX - rect.left) * width) / rect.width)));
           }}
           onPointerLeave={() => setHover(null)}
-          className="block touch-pan-y"
+          className="block h-auto w-full touch-pan-y"
         >
           {[0.25, 0.5, 0.75, 1].map((r) => (
             <g key={r}>
