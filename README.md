@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recode
 
-## Getting Started
+Spaced repetition for LeetCode. Tick problems as you solve them; Recode schedules each one for a
+re-solve right before you would forget it (FSRS-6), interleaves reviews across patterns, trains
+pattern recognition with quick drills, and tracks memory per problem and per pattern.
 
-First, run the development server:
+## Stack
+Next.js 16 (App Router, Turbopack) · React 19 · Clerk · Neon Postgres + Drizzle · ts-fsrs ·
+Tailwind v4 · Motion · Resend + Vercel Cron.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Setup
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Install**: `pnpm install`
+2. **Database**: create a Neon project (or run Postgres locally) and put the connection string in
+   `.env.local` as `DATABASE_URL` (see `.env.example`).
+   For local development: `docker run -d --name recode-pg -e POSTGRES_PASSWORD=recode -e POSTGRES_USER=recode -e POSTGRES_DB=recode -p 54329:5432 postgres:17-alpine`
+3. **Schema and data**: `pnpm db:migrate && pnpm db:seed`
+   (seeds 18 patterns, 1,868 problems, 464 company lists, NeetCode 150 and Blind 75)
+4. **Clerk**: create an application at dashboard.clerk.com and copy
+   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` into `.env.local`
+   (or run `npx clerk@latest init`). Optional: add a webhook to `/api/webhooks/clerk` for
+   `user.updated` and `user.deleted`, and set `CLERK_WEBHOOK_SIGNING_SECRET`.
+5. **Run**: `pnpm dev`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Reminders (optional)
+Set `RESEND_API_KEY`, `EMAIL_FROM` and `CRON_SECRET`. `vercel.json` schedules
+`/api/cron/reminders` hourly; it emails each user at their chosen local hour on days with reviews
+due. Hourly crons need a Vercel Pro plan; on Hobby, change the schedule to once a day.
+Test locally: `curl -H "Authorization: Bearer $CRON_SECRET" "localhost:3000/api/cron/reminders?force=1"`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How scheduling works
+- **FSRS-6** (`src/lib/srs/fsrs.ts`): one memory card per (user, problem), day granularity, fuzz on,
+  per-user recall target (default 90%).
+- **Grading** (`src/lib/srs/grade.ts`): time against a target, hints, solution viewed and wrong
+  submissions suggest and cap the grade.
+- **Daily queue** (`src/lib/srs/queue.ts`): lowest recall first, filled to a budget in minutes,
+  reordered so consecutive reviews never share a pattern (interleaving).
+- **Drills** (`src/lib/srs/drills.ts`): "which pattern?" questions with near-miss distractors,
+  training a separate FSRS card per pattern.
+- **Pattern memory** (`src/lib/srs/mastery.ts`): difficulty-weighted recall per pattern plus a
+  prerequisite roadmap.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development
+- `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build`
+- A clock widget (bottom right, development only) shifts time by days so reviews come due.

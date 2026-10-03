@@ -1,26 +1,226 @@
 @import "tailwindcss";
+@import "@clerk/ui/themes/shadcn.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Recode design tokens. Base: Linear (DESIGN.md). Dark is the default; light is designed, not
+ * inverted. One chromatic accent (lavender) for CTA, focus, links and active state only.
+ * Memory colours (strong / fading / at risk) appear only inside data.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #fbfbfc;
+  --surface-1: #ffffff;
+  --surface-2: #f4f5f6;
+  --surface-3: #eceef0;
+  --line: #e6e7ea;
+  --line-strong: #d4d6db;
+  --ink: #0e0f10;
+  --ink-muted: #3c3f45;
+  --ink-subtle: #63676e;
+  --ink-faint: #9a9ea6;
+
+  --accent: #5e6ad2;
+  --accent-hover: #4d59c4;
+  --accent-ink: #ffffff;
+  --accent-text: #4b57c6;
+  --focus: rgb(94 106 210 / 0.55);
+
+  --strong: #1f8a3a;
+  --fading: #b7791f;
+  --risk: #c4413a;
+  --easy: #0f8a7e;
+  --medium: #a86d0b;
+  --hard: #c03b4a;
+
+  --heat-0: #eceef0;
+  --heat-1: #d6daf6;
+  --heat-2: #aab2ec;
+  --heat-3: #7d88df;
+  --heat-4: #5e6ad2;
+
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #08090a;
+  --surface-1: #0f1011;
+  --surface-2: #151617;
+  --surface-3: #1b1c1e;
+  --line: #222428;
+  --line-strong: #2f3136;
+  --ink: #f7f8f8;
+  --ink-muted: #d0d6e0;
+  --ink-subtle: #8a8f98;
+  --ink-faint: #62666d;
+
+  --accent: #5e6ad2;
+  --accent-hover: #6c78e0;
+  --accent-ink: #ffffff;
+  --accent-text: #8b95ec;
+  --focus: rgb(130 143 255 / 0.55);
+
+  --strong: #3fb768;
+  --fading: #d9a441;
+  --risk: #e5655d;
+  --easy: #3fbfae;
+  --medium: #d9a441;
+  --hard: #e5707e;
+
+  --heat-0: #16171a;
+  --heat-1: #262a4a;
+  --heat-2: #363f80;
+  --heat-3: #4b56b4;
+  --heat-4: #7c87ec;
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-strong: var(--strong);
+  --color-fading: var(--fading);
+  --color-risk: var(--risk);
+  --color-easy: var(--easy);
+  --color-medium: var(--medium);
+  --color-hard: var(--hard);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* shadcn-compatible names consumed by the Clerk shadcn theme */
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface-1);
+  --color-card-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--ink-subtle);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+  --color-destructive: var(--risk);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Clerk's shadcn theme reads these plain variables. */
+:root,
+.dark {
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--surface-1);
+  --card-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--ink-subtle);
+  --input: var(--line-strong);
+  --ring: var(--accent);
+  --destructive: var(--risk);
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    touch-action: manipulation;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  select {
+    background-color: var(--surface-1);
+    color: var(--ink);
+  }
+  [id] {
+    scroll-margin-top: 80px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .hairline-top {
+    box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
 }
