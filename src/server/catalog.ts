@@ -10,13 +10,13 @@ import { patterns, problems, type Difficulty } from "@/db/schema";
  *
  * Deliberately limited to Recode's own content (patterns, cues, roadmap, its own classification)
  * plus basic public problem facts. Company lists and curated sheets stay inside the signed-in app.
+ * No external problem URLs are selected: public pages only link within Recode.
  */
 
 export type CatalogProblem = {
   slug: string;
   title: string;
   difficulty: Difficulty;
-  url: string;
   patternName: string | null;
   patternSlug: string | null;
 };
@@ -27,7 +27,6 @@ const problemCols = {
   slug: problems.slug,
   title: problems.title,
   difficulty: problems.difficulty,
-  url: problems.url,
   patternName: patterns.name,
   patternSlug: patterns.slug,
 };

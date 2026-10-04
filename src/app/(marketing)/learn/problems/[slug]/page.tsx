@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "@phosphor-icons/react/ssr";
+import { Show } from "@clerk/nextjs";
+import { ArrowRight } from "@phosphor-icons/react/ssr";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CatalogContainer, CatalogHeader, LinkChips, ProblemList, SectionHeading, TrackCta } from "@/components/marketing/catalog";
 import { DifficultyLabel } from "@/components/problems/difficulty";
@@ -78,11 +79,20 @@ export default async function ProblemCatalogPage(props: PageProps<"/learn/proble
       >
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <DifficultyLabel difficulty={problem.difficulty} className="text-[14px]" />
-          <Button asChild variant="secondary" size="md">
-            <a href={problem.url} target="_blank" rel="noreferrer">
-              Open Problem <ArrowUpRight size={14} aria-hidden />
-            </a>
-          </Button>
+          <Show when="signed-out">
+            <Button asChild variant="primary" size="md">
+              <Link href="/sign-up">
+                Practise in Recode <ArrowRight size={14} aria-hidden />
+              </Link>
+            </Button>
+          </Show>
+          <Show when="signed-in">
+            <Button asChild variant="primary" size="md">
+              <Link href={`/problems/${slug}`}>
+                Open in Recode <ArrowRight size={14} aria-hidden />
+              </Link>
+            </Button>
+          </Show>
         </div>
       </CatalogHeader>
 
