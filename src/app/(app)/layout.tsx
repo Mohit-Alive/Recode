@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Sidebar } from "@/components/shell/sidebar";
 import { MobileTabBar, MobileTopBar } from "@/components/shell/mobile-nav";
 import { CommandMenu } from "@/components/shell/command-menu";
@@ -8,6 +9,9 @@ import { getNow, getTimeOffsetDays } from "@/server/clock";
 import { getShellData } from "@/server/queries";
 import { currentStreak } from "@/lib/streak";
 import { dayKey } from "@/lib/time";
+
+// Signed-in app: personal data, never indexed. The public catalog lives under /learn.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();

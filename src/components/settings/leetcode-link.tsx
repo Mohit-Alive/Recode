@@ -57,16 +57,16 @@ export function LeetCodeLink({ username, verified, token }: { username: string |
           });
         }}
       >
-        <Label htmlFor="lc-username">LeetCode username</Label>
+        <Label htmlFor="lc-username">Profile username</Label>
         <div className="flex gap-2">
           <Input
             id="lc-username"
-            name="leetcode-username"
+            name="profile-username"
             autoComplete="off"
             spellCheck={false}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="e.g. neal_wu…"
+            placeholder="e.g. your_username…"
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "lc-error" : undefined}
             className="max-w-xs"
@@ -87,7 +87,7 @@ export function LeetCodeLink({ username, verified, token }: { username: string |
           <p className="text-[13px] text-ink-muted">
             To prove the account is yours, paste this token anywhere in your{" "}
             <a href="https://leetcode.com/profile/" target="_blank" rel="noreferrer" className="text-accent-text hover:underline">
-              LeetCode profile summary
+              profile summary
             </a>
             , save, then verify. You can remove it afterwards.
           </p>
@@ -116,7 +116,7 @@ export function LeetCodeLink({ username, verified, token }: { username: string |
               onClick={() =>
                 start(async () => {
                   const res = await verifyLeetCodeLink();
-                  if (res.ok) toast.success("LeetCode linked.");
+                  if (res.ok) toast.success("Profile linked.");
                   else toast.error(res.error);
                 })
               }

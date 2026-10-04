@@ -8,6 +8,13 @@
       "when": 1791015496338,
       "tag": "0000_tiresome_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791124102652,
+      "tag": "0001_rename_curated_sheets",
+      "breakpoints": true
     }
   ]
 }

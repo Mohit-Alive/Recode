@@ -1,6 +1,6 @@
 # Recode
 
-Spaced repetition for LeetCode. Tick problems as you solve them; Recode schedules each one for a
+Spaced repetition for coding interview prep. Tick problems as you solve them; Recode schedules each one for a
 re-solve right before you would forget it (FSRS-6), interleaves reviews across patterns, trains
 pattern recognition with quick drills, and tracks memory per problem and per pattern.
 
@@ -15,7 +15,7 @@ Tailwind v4 · Motion · Resend + Vercel Cron.
    `.env.local` as `DATABASE_URL` (see `.env.example`).
    For local development: `docker run -d --name recode-pg -e POSTGRES_PASSWORD=recode -e POSTGRES_USER=recode -e POSTGRES_DB=recode -p 54329:5432 postgres:17-alpine`
 3. **Schema and data**: `pnpm db:migrate && pnpm db:seed`
-   (seeds 18 patterns, 1,868 problems, 464 company lists, NeetCode 150 and Blind 75)
+   (seeds 18 patterns, 1,868 problems, 464 company lists, Roadmap 150 and Essentials 75)
 4. **Clerk**: create an application at dashboard.clerk.com and copy
    `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` into `.env.local`
    (or run `npx clerk@latest init`). Optional: add a webhook to `/api/webhooks/clerk` for

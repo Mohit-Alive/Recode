@@ -1,5 +1,7 @@
+import { ESSENTIALS_SHEET, ROADMAP_SHEET } from "./sheet-names";
+
 /**
- * Curated sheets. Each section lists LeetCode slugs in study order. The pattern of every
+ * Curated sheets. Each section lists problem slugs in study order. The pattern of every
  * problem in these lists is hand-assigned (CURATED_PATTERN) and used for drills.
  */
 export type SheetSeed = {
@@ -9,10 +11,9 @@ export type SheetSeed = {
   sections: { title: string; pattern?: string; slugs: string[] }[];
 };
 
-const NEETCODE_150: SheetSeed = {
-  slug: "neetcode-150",
-  name: "NeetCode 150",
-  description: "The Blind 75 extended to 150 problems, ordered along the pattern roadmap.",
+const ROADMAP_150: SheetSeed = {
+  ...ROADMAP_SHEET,
+  description: "150 problems ordered along the pattern roadmap, one pattern at a time.",
   sections: [
     {
       title: "Arrays & Hashing",
@@ -275,10 +276,9 @@ const NEETCODE_150: SheetSeed = {
   ],
 };
 
-const BLIND_75: SheetSeed = {
-  slug: "blind-75",
-  name: "Blind 75",
-  description: "The original 75 must-know interview problems, grouped by data structure.",
+const ESSENTIALS_75: SheetSeed = {
+  ...ESSENTIALS_SHEET,
+  description: "75 must-know interview problems, grouped by data structure.",
   sections: [
     {
       title: "Array",
@@ -400,15 +400,15 @@ const BLIND_75: SheetSeed = {
   ],
 };
 
-export const CURATED_SHEETS: SheetSeed[] = [NEETCODE_150, BLIND_75];
+export const CURATED_SHEETS: SheetSeed[] = [ROADMAP_150, ESSENTIALS_75];
 
 /** slug -> pattern slug for every hand-curated problem. */
 export const CURATED_PATTERN: Record<string, string> = (() => {
   const map: Record<string, string> = {};
-  for (const section of NEETCODE_150.sections) {
+  for (const section of ROADMAP_150.sections) {
     for (const slug of section.slugs) map[slug] = section.pattern!;
   }
-  // Blind 75 problems that are not in the NeetCode 150.
+  // Essentials 75 problems that are not in the Roadmap 150.
   map["combination-sum-iv"] = "1d-dp";
   return map;
 })();

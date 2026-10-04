@@ -22,7 +22,7 @@ function ago(d: Date) {
   return rtf.format(Math.round(hours / 24), "day");
 }
 
-/** Accepted LeetCode submissions that have not been logged here yet. Never auto-applied. */
+/** Accepted submissions from the linked profile that have not been logged here yet. Never auto-applied. */
 export function SyncSuggestions({ items, className }: { items: Item[]; className?: string }) {
   const [pending, start] = useTransition();
   return (
@@ -30,7 +30,7 @@ export function SyncSuggestions({ items, className }: { items: Item[]; className
       <div className="flex items-center gap-2 border-b border-line px-4 py-3">
         <ArrowsClockwise size={15} className="text-accent-text" aria-hidden />
         <h2 id="sync" className="text-[14px] font-medium">
-          Recently accepted on LeetCode
+          Recently accepted submissions
         </h2>
       </div>
       <ul className="divide-y divide-line">

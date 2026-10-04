@@ -1,5 +1,5 @@
 /**
- * The 18 canonical patterns (NeetCode roadmap taxonomy) with a prerequisite DAG and
+ * The 18 canonical interview patterns (the common roadmap taxonomy) with a prerequisite DAG and
  * "neighbors": the patterns most often confused with each one, used as drill distractors.
  */
 export type PatternSeed = {

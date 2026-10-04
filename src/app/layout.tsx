@@ -7,17 +7,39 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { parseTheme, RESOLVED_THEME_COOKIE, THEME_COOKIE } from "@/components/theme/theme-cookie";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { isIndexableDeployment, SITE } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: { default: "Recode: remember every problem you solve", template: "%s · Recode" },
-  description:
-    "Spaced repetition for LeetCode. Recode schedules each problem you solve for review right before you would forget it, using the FSRS memory model.",
-  openGraph: { title: "Recode", description: "Remember every LeetCode problem you solve.", type: "website" },
+  metadataBase: new URL(SITE.url),
+  title: { default: SITE.title, template: "%s · Recode" },
+  description: SITE.description,
+  applicationName: SITE.name,
+  keywords: [...SITE.keywords],
+  category: "education",
+  creator: SITE.name,
+  publisher: SITE.name,
+  formatDetection: { telephone: false, email: false, address: false },
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    locale: "en_US",
+    title: SITE.title,
+    description: SITE.description,
+    url: "/",
+  },
+  // Title, description and image fall back to the Open Graph tags, which every page sets.
+  twitter: { card: "summary_large_image" },
+  robots: isIndexableDeployment
+    ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } }
+    : { index: false, follow: false },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+  },
 };
 
 export const viewport: Viewport = {

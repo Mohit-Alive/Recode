@@ -12,11 +12,11 @@ import { requireUser } from "@/server/auth";
 const usernameSchema = z
   .string()
   .trim()
-  .min(1, "Enter your LeetCode username")
+  .min(1, "Enter your profile username")
   .max(40)
   .regex(/^[A-Za-z0-9_-]+$/, "Usernames contain only letters, numbers, - and _");
 
-/** Step 1: store the username and issue a token to paste into the LeetCode profile summary. */
+/** Step 1: store the username and issue a token to paste into the public profile summary. */
 export async function startLeetCodeLink(username: string) {
   const user = await requireUser();
   const parsed = usernameSchema.safeParse(username);
@@ -35,10 +35,10 @@ export async function verifyLeetCodeLink() {
   const user = await requireUser();
   if (!user.leetcodeUsername || !user.leetcodeVerifyToken) return { ok: false as const, error: "Start linking first" };
   const profile = await profileSummary(user.leetcodeUsername);
-  if (profile === null) return { ok: false as const, error: "LeetCode did not respond. Try again in a minute." };
+  if (profile === null) return { ok: false as const, error: "The problem site did not respond. Try again in a minute." };
   if (!profile.exists) return { ok: false as const, error: `No LeetCode user named ${user.leetcodeUsername}` };
   if (!profile.aboutMe.includes(user.leetcodeVerifyToken)) {
-    return { ok: false as const, error: "Token not found in your profile summary yet. Save it on LeetCode, then retry." };
+    return { ok: false as const, error: "Token not found in your profile summary yet. Save it on your profile, then retry." };
   }
   await db.update(users).set({ leetcodeVerified: true }).where(eq(users.id, user.id));
   refresh();
@@ -69,7 +69,7 @@ export async function syncLeetCode(force = false) {
     return { ok: true as const, added: 0, skipped: true };
   }
   const subs = await recentAccepted(user.leetcodeUsername);
-  if (subs === null) return { ok: false as const, error: "LeetCode is not responding right now" };
+  if (subs === null) return { ok: false as const, error: "The problem site is not responding right now" };
   let added = 0;
   for (const s of subs) {
     const res = await db

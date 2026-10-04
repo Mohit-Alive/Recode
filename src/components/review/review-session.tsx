@@ -225,7 +225,7 @@ export function ReviewSession(props: Props) {
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 <Button asChild variant="primary" size="lg">
                   <a href={problem.url} target="_blank" rel="noreferrer" onClick={startSolving}>
-                    Open on LeetCode and Start Timer <ArrowUpRight size={15} aria-hidden />
+                    Open Problem and Start Timer <ArrowUpRight size={15} aria-hidden />
                   </a>
                 </Button>
                 <Button variant="ghost" onClick={() => go("reveal")}>

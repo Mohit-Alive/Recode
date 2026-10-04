@@ -11,10 +11,11 @@ import { requireUser } from "@/server/auth";
 import { getNow } from "@/server/clock";
 import { getSheet } from "@/server/queries";
 import { formatPercent, slugify } from "@/lib/format";
+import { ROADMAP_SHEET, sheetName } from "@/data/sheet-names";
 
 export async function generateMetadata(props: PageProps<"/sheets/[slug]">) {
   const { slug } = await props.params;
-  return { title: slug === "blind-75" ? "Blind 75" : slug === "neetcode-150" ? "NeetCode 150" : "Sheet" };
+  return { title: sheetName(slug) };
 }
 
 export default async function SheetPage(props: PageProps<"/sheets/[slug]">) {
@@ -90,7 +91,7 @@ export default async function SheetPage(props: PageProps<"/sheets/[slug]">) {
                 </div>
                 <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface-1">
                   {section.visible.map((p) => (
-                    <ProblemRow key={p.id} row={p} index={positions.get(p.id)} showPattern={slug !== "neetcode-150"} />
+                    <ProblemRow key={p.id} row={p} index={positions.get(p.id)} showPattern={slug !== ROADMAP_SHEET.slug} />
                   ))}
                 </ul>
               </section>

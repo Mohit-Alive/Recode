@@ -46,7 +46,7 @@ export const users = pgTable("users", {
   desiredRetention: real("desired_retention").notNull().default(0.9),
   dailyMinutes: integer("daily_minutes").notNull().default(45),
   newPerDay: integer("new_per_day").notNull().default(3),
-  activeSheetSlug: text("active_sheet_slug").notNull().default("neetcode-150"),
+  activeSheetSlug: text("active_sheet_slug").notNull().default("roadmap-150"),
   emailReminders: boolean("email_reminders").notNull().default(true),
   reminderHour: smallint("reminder_hour").notNull().default(19),
   lastReminderSentOn: date("last_reminder_sent_on"),

@@ -14,6 +14,7 @@ import { getNow } from "@/server/clock";
 import { DAILY_DRILLS, getSyncSuggestions, getToday } from "@/server/queries";
 import { formatMinutes, formatPercent } from "@/lib/format";
 import { REVIEW_ESTIMATE_MINUTES } from "@/lib/srs/grade";
+import { sheetName } from "@/data/sheet-names";
 
 export const metadata = { title: "Today" };
 
@@ -36,7 +37,7 @@ export default async function TodayPage() {
         </h1>
         <p className="mt-1.5 max-w-[60ch] text-[14px] leading-relaxed text-ink-subtle">
           {isNew
-            ? "Solve a problem on LeetCode, tick it here, and Recode brings it back right before you would forget it."
+            ? "Solve a problem, tick it here, and Recode brings it back right before you would forget it."
             : reviewsLeft > 0
               ? "Re-solve them from scratch today. Each one comes back later than the last time, as long as you keep getting it."
               : t.reviewsDone > 0
@@ -145,9 +146,9 @@ export default async function TodayPage() {
             <p className="mt-1 text-[13px] text-ink-subtle">
               Next up from{" "}
               <Link href={`/sheets/${user.activeSheetSlug}`} className="text-ink-muted underline decoration-line-strong underline-offset-2 hover:text-ink">
-                {user.activeSheetSlug === "blind-75" ? "Blind 75" : "NeetCode 150"}
+                {sheetName(user.activeSheetSlug)}
               </Link>
-              . Solve on LeetCode, then tick it.
+              . Solve it, then tick it here.
             </p>
           </div>
           <Link href="/sheets" className="text-[13px] text-accent-text hover:underline">
@@ -176,7 +177,7 @@ export default async function TodayPage() {
 
 function HowItWorks() {
   const steps = [
-    { title: "Solve", body: "Open the problem on LeetCode and solve it the way you normally would." },
+    { title: "Solve", body: "Open the problem and solve it the way you normally would." },
     { title: "Tick and reflect", body: "Tick it here, say how it went, and write the one-line insight that cracked it." },
     { title: "Re-solve on cue", body: "It shows up in Today just before your recall drops below 90%. Each success pushes it further out." },
   ];

@@ -10,6 +10,7 @@ import type { Difficulty } from "@/db/schema";
 import { DifficultyLabel } from "@/components/problems/difficulty";
 import { Kbd } from "@/components/ui/kbd";
 import { NAV, SETTINGS_NAV } from "./nav-items";
+import { CURATED_SHEET_NAMES } from "@/data/sheet-names";
 
 const EVENT = "recode:command-menu";
 export const openCommandMenu = () => window.dispatchEvent(new Event(EVENT));
@@ -19,10 +20,7 @@ type Results = {
   companies: { slug: string; name: string; total: number }[];
 };
 
-const SHEETS = [
-  { slug: "neetcode-150", name: "NeetCode 150" },
-  { slug: "blind-75", name: "Blind 75" },
-];
+const SHEETS = CURATED_SHEET_NAMES;
 
 export function CommandMenu() {
   const router = useRouter();

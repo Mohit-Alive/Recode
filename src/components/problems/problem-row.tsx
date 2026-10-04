@@ -62,7 +62,7 @@ export function ProblemRow({
         href={row.url}
         target="_blank"
         rel="noreferrer"
-        aria-label={`Open ${row.title} on LeetCode`}
+        aria-label={`Open ${row.title} in a new tab`}
         className="grid size-8 shrink-0 place-items-center rounded-md text-ink-subtle transition-colors hover:bg-surface-3 hover:text-ink"
       >
         <ArrowUpRight size={15} aria-hidden />

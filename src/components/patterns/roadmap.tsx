@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MemoryMeter } from "@/components/problems/memory-meter";
 import { formatPercent, slugify } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { ROADMAP_SHEET } from "@/data/sheet-names";
 
 export type RoadmapNode = {
   slug: string;
@@ -90,7 +91,7 @@ export function Roadmap({ nodes }: { nodes: RoadmapNode[] }) {
                   if (el) refs.current.set(n.slug, el);
                   else refs.current.delete(n.slug);
                 }}
-                href={`/sheets/neetcode-150#${slugify(n.name)}`}
+                href={`/sheets/${ROADMAP_SHEET.slug}#${slugify(n.name)}`}
                 className={cn(
                   "group relative flex flex-col gap-2 rounded-lg border bg-surface-1 px-3.5 py-3 transition-colors md:w-[188px]",
                   n.status === "learning" || n.status === "mastered" ? "border-line-strong" : "border-line",

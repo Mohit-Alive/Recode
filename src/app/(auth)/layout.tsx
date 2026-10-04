@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/shell/logo";
+
+// Auth screens carry no content worth ranking.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (

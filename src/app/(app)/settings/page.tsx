@@ -29,7 +29,7 @@ export default async function SettingsPage() {
             reminderHour: user.reminderHour,
           }}
         />
-        <Section title="LeetCode" description="Link your profile to turn accepted submissions into one-click log suggestions.">
+        <Section title="Submission sync" description="Link your public profile on the site where you solve to turn accepted submissions into one-click log suggestions.">
           <LeetCodeLink username={user.leetcodeUsername} verified={user.leetcodeVerified} token={user.leetcodeVerifyToken} />
         </Section>
         <Section title="Danger zone">

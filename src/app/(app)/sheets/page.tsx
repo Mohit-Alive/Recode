@@ -20,7 +20,7 @@ export default async function SheetsPage() {
     <PageContainer>
       <PageHeader
         title="Sheets"
-        description="Tick problems as you solve them on LeetCode. Each tick becomes a memory Recode keeps alive with timed reviews."
+        description="Tick problems as you solve them. Each tick becomes a memory Recode keeps alive with timed reviews."
       />
 
       <section aria-labelledby="curated" className="mt-8">

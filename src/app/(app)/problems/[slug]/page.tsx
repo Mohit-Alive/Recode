@@ -60,7 +60,7 @@ export default async function ProblemPage(props: PageProps<"/problems/[slug]">) 
           ) : null}
           <Button asChild variant="primary">
             <a href={problem.url} target="_blank" rel="noreferrer">
-              Open on LeetCode <ArrowUpRight size={14} aria-hidden />
+              Open Problem <ArrowUpRight size={14} aria-hidden />
             </a>
           </Button>
         </div>
@@ -106,7 +106,7 @@ export default async function ProblemPage(props: PageProps<"/problems/[slug]">) 
         <section className="mt-8 flex flex-col items-start gap-4 rounded-xl border border-dashed border-line p-6 sm:flex-row sm:items-center">
           <SolveCheck problemId={problem.id} title={problem.title} solved={false} size="lg" />
           <p className="text-[14px] text-ink-muted">
-            Solved it on LeetCode? Tick it to start tracking your memory of it. The first review lands a few days out.
+            Solved it? Tick it to start tracking your memory of it. The first review lands a few days out.
           </p>
         </section>
       )}
@@ -165,7 +165,7 @@ export default async function ProblemPage(props: PageProps<"/problems/[slug]">) 
           {problem.topics && problem.topics.length > 0 ? (
             <section aria-labelledby="topics-h">
               <h2 id="topics-h" className="text-[13px] font-medium text-ink-muted">
-                LeetCode topics
+                Topics
               </h2>
               <ul className="mt-2 flex flex-wrap gap-1.5">
                 {problem.topics.map((t) => (
