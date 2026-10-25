@@ -17,6 +17,21 @@ describe("fsrs adapter", () => {
     expect(log.rating).toBe(Rating.Good);
   });
 
+  it("never schedules past a custom longest gap", () => {
+    let card = schedule(null, now, Rating.Easy, 0.9, 14).card;
+    for (let i = 0; i < 8; i++) {
+      expect(card.scheduledDays).toBeLessThanOrEqual(14);
+      card = schedule(card, card.due, Rating.Easy, 0.9, 14).card;
+    }
+    expect(card.scheduledDays).toBe(14);
+  });
+
+  it("reviews sooner when a sheet asks for higher recall", () => {
+    const relaxed = previewIntervals(schedule(null, now, Rating.Good, 0.8).card, now, 0.8);
+    const intense = previewIntervals(schedule(null, now, Rating.Good, 0.95).card, now, 0.95);
+    expect(intense[Rating.Good]).toBeLessThan(relaxed[Rating.Good]);
+  });
+
   it("grows the interval after a successful review", () => {
     const first = schedule(null, now, Rating.Good).card;
     const later = first.due;

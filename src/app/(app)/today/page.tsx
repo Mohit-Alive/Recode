@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Lightning, Shuffle } from "@phosphor-icons/react/ssr";
+import { ArrowRight, Lightning, ListPlus, Shuffle } from "@phosphor-icons/react/ssr";
 import { PageContainer } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -11,7 +11,7 @@ import { BudgetBar } from "@/components/today/budget-bar";
 import { StartReviewsShortcut } from "@/components/today/start-shortcut";
 import { requireUser } from "@/server/auth";
 import { getNow } from "@/server/clock";
-import { DAILY_DRILLS, getSyncSuggestions, getToday } from "@/server/queries";
+import { DAILY_DRILLS, getCustomSheetIndex, getSyncSuggestions, getToday } from "@/server/queries";
 import { formatMinutes, formatPercent } from "@/lib/format";
 import { REVIEW_ESTIMATE_MINUTES } from "@/lib/srs/grade";
 import { sheetName } from "@/data/sheet-names";
@@ -21,7 +21,8 @@ export const metadata = { title: "Today" };
 export default async function TodayPage() {
   const user = await requireUser();
   const now = await getNow();
-  const [t, suggestions] = await Promise.all([getToday(user, now), getSyncSuggestions(user)]);
+  const [t, suggestions, ownSheets] = await Promise.all([getToday(user, now), getSyncSuggestions(user), getCustomSheetIndex(user, now)]);
+  const ownDue = ownSheets.filter((s) => s.due > 0);
   const date = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: user.timezone }).format(now);
   const name = user.name ? `, ${user.name}` : "";
   const isNew = t.solvedTotal === 0;
@@ -106,6 +107,32 @@ export default async function TodayPage() {
             </p>
           ) : null}
           <StartReviewsShortcut />
+        </section>
+      ) : null}
+
+      {ownDue.length > 0 ? (
+        <section aria-labelledby="own-sheets" className="mt-10">
+          <h2 id="own-sheets" className="text-[17px] font-semibold tracking-tight">
+            Your sheets
+          </h2>
+          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-subtle">
+            <ListPlus size={13} aria-hidden />
+            Each runs on its own schedule, outside your daily review budget.
+          </p>
+          <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface-1">
+            {ownDue.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/sheets/custom/${s.id}/review`}
+                  className="group flex min-h-12 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-2/60"
+                >
+                  <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{s.name}</span>
+                  <span className="font-mono text-[12px] text-accent-text tabular">{s.due} due</span>
+                  <ArrowRight size={14} className="text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

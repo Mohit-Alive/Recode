@@ -30,7 +30,7 @@ export function buildReviewQueue<T extends QueueItem>(
   due: T[],
   opts: { budgetMinutes: number; spentMinutes?: number },
 ): ReviewQueue<T> {
-  const sorted = [...due].sort((a, b) => a.r - b.r || a.due.getTime() - b.due.getTime());
+  const sorted = weakestFirst(due);
   let remaining = Math.max(0, opts.budgetMinutes - (opts.spentMinutes ?? 0));
   const chosen: T[] = [];
   const deferred: T[] = [];
@@ -49,6 +49,11 @@ export function buildReviewQueue<T extends QueueItem>(
   }
 
   return { items: interleave(chosen), deferred, plannedMinutes };
+}
+
+/** Lowest retrievability first, then the longest overdue. */
+export function weakestFirst<T extends { r: number; due: Date }>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.r - b.r || a.due.getTime() - b.due.getTime());
 }
 
 /**

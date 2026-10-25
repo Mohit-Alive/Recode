@@ -267,10 +267,94 @@ export const leetcodeSubmissions = pgTable(
   ],
 );
 
+/**
+ * A sheet the user builds by pasting links to problems they solved, from any site. It keeps its own
+ * memory: each item has its own FSRS card scheduled with the sheet's recall target and longest gap,
+ * independent of user_problems, so the same problem can live here and in a curated sheet without the
+ * two schedules touching.
+ */
+export const customSheets = pgTable(
+  "custom_sheets",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    desiredRetention: real("desired_retention").notNull().default(0.9),
+    /** Longest gap between reviews, in days. */
+    maxInterval: integer("max_interval").notNull().default(365),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("custom_sheets_user_idx").on(t.userId)],
+);
+
+export const customSheetItems = pgTable(
+  "custom_sheet_items",
+  {
+    id: serial("id").primaryKey(),
+    sheetId: integer("sheet_id")
+      .notNull()
+      .references(() => customSheets.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Canonical link (see parseProblemLink); unique within a sheet. */
+    url: text("url").notNull(),
+    title: text("title").notNull(),
+    /** Problem difficulty. Named `level` because `difficulty` is the FSRS card column. */
+    level: difficultyEnum("level").notNull().default("MEDIUM"),
+    /** Set when the link is a catalog problem. Only used for its facts; the memory stays here. */
+    problemId: integer("problem_id").references(() => problems.id, { onDelete: "set null" }),
+    solvedAt: ts("solved_at").notNull(),
+    insight: text("insight"),
+    ...fsrsColumns(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("custom_sheet_items_sheet_url").on(t.sheetId, t.url),
+    index("custom_sheet_items_user_due_idx").on(t.userId, t.due),
+  ],
+);
+
+export const customReviewLogs = pgTable(
+  "custom_review_logs",
+  {
+    id: serial("id").primaryKey(),
+    itemId: integer("item_id")
+      .notNull()
+      .references(() => customSheetItems.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rating: smallint("rating").notNull(),
+    state: smallint("state").notNull(),
+    due: ts("due").notNull(),
+    stability: doublePrecision("stability").notNull(),
+    difficulty: doublePrecision("difficulty").notNull(),
+    elapsedDays: integer("elapsed_days").notNull(),
+    lastElapsedDays: integer("last_elapsed_days").notNull(),
+    scheduledDays: integer("scheduled_days").notNull(),
+    learningSteps: integer("learning_steps").notNull().default(0),
+    review: ts("review").notNull(),
+    retrievability: real("retrievability"),
+    source: reviewSourceEnum("source").notNull(),
+    suggestedRating: smallint("suggested_rating"),
+    timeTakenSec: integer("time_taken_sec"),
+    hintUsed: boolean("hint_used"),
+    viewedSolution: boolean("viewed_solution"),
+    wrongSubmissions: smallint("wrong_submissions"),
+  },
+  (t) => [index("custom_review_logs_item_idx").on(t.itemId), index("custom_review_logs_user_review_idx").on(t.userId, t.review)],
+);
+
 export type User = typeof users.$inferSelect;
 export type Problem = typeof problems.$inferSelect;
 export type Pattern = typeof patterns.$inferSelect;
 export type UserProblem = typeof userProblems.$inferSelect;
 export type ReviewLogRow = typeof reviewLogs.$inferSelect;
 export type UserPattern = typeof userPatterns.$inferSelect;
+export type CustomSheet = typeof customSheets.$inferSelect;
+export type CustomSheetItem = typeof customSheetItems.$inferSelect;
 export type Difficulty = (typeof difficultyEnum.enumValues)[number];

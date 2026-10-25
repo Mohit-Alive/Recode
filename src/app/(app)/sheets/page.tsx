@@ -1,19 +1,26 @@
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/ssr";
+import { ArrowRight, Plus } from "@phosphor-icons/react/ssr";
 import { PageContainer, PageHeader } from "@/components/shell/page-header";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { ActiveSheetButton } from "@/components/sheets/active-sheet-button";
+import { SheetFormDialog } from "@/components/custom-sheets/sheet-form-dialog";
+import { Button } from "@/components/ui/button";
 import { requireUser } from "@/server/auth";
 import { getNow } from "@/server/clock";
-import { getCompanyIndex, getSheetIndex } from "@/server/queries";
-import { formatPercent } from "@/lib/format";
+import { getCompanyIndex, getCustomSheetIndex, getSheetIndex } from "@/server/queries";
+import { formatDayDelta, formatPercent } from "@/lib/format";
+import { gapLabel } from "@/lib/srs/pace";
 
 export const metadata = { title: "Sheets" };
 
 export default async function SheetsPage() {
   const user = await requireUser();
   const now = await getNow();
-  const [sheetList, companyList] = await Promise.all([getSheetIndex(user, now), getCompanyIndex(user.id)]);
+  const [sheetList, companyList, ownSheets] = await Promise.all([
+    getSheetIndex(user, now),
+    getCompanyIndex(user.id),
+    getCustomSheetIndex(user, now),
+  ]);
   const topCompanies = companyList.slice(0, 12);
 
   return (
@@ -76,6 +83,77 @@ export default async function SheetsPage() {
             );
           })}
         </div>
+      </section>
+
+      <section aria-labelledby="own" className="mt-12">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 id="own" className="text-[17px] font-semibold tracking-tight">
+              Your sheets
+            </h2>
+            <p className="mt-1 text-[13px] text-ink-subtle">
+              Paste links to problems you solve anywhere. Each sheet keeps its own memory and review schedule.
+            </p>
+          </div>
+          {ownSheets.length > 0 ? (
+            <SheetFormDialog>
+              <Button variant="secondary" size="sm">
+                <Plus size={14} aria-hidden /> New Sheet
+              </Button>
+            </SheetFormDialog>
+          ) : null}
+        </div>
+        {ownSheets.length === 0 ? (
+          <div className="mt-4 flex flex-col items-start gap-4 rounded-xl border border-dashed border-line px-5 py-6 sm:flex-row sm:items-center">
+            <p className="flex-1 text-[13px] leading-relaxed text-ink-subtle">
+              Practising from another list or site? Make a sheet for it, paste each problem’s link the day you solve it, and Recode schedules its
+              reviews on that sheet’s own pace, apart from everything else.
+            </p>
+            <SheetFormDialog>
+              <Button variant="primary">
+                <Plus size={15} aria-hidden /> New Sheet
+              </Button>
+            </SheetFormDialog>
+          </div>
+        ) : (
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ownSheets.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/sheets/custom/${s.id}`}
+                  className="flex h-full flex-col rounded-xl border border-line bg-surface-1 p-4 transition-colors hover:border-line-strong"
+                >
+                  <span className="truncate text-[15px] font-semibold tracking-tight text-ink">{s.name}</span>
+                  <span className="mt-1 mb-4 line-clamp-2 text-[12.5px] leading-relaxed text-ink-subtle">
+                    {s.description ?? `${formatPercent(s.desiredRetention)} recall, gaps up to ${gapLabel(s.maxInterval)}`}
+                  </span>
+                  <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-line pt-3 text-[12px]">
+                    <div>
+                      <dt className="text-ink-subtle">Tracked</dt>
+                      <dd className="mt-0.5 font-mono text-[14px] text-ink tabular">{s.total}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-ink-subtle">Recall</dt>
+                      <dd className="mt-0.5 font-mono text-[14px] text-ink tabular">{s.retention === null ? "-" : formatPercent(s.retention)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-ink-subtle">Review</dt>
+                      <dd className="mt-0.5 text-[13px] text-ink">
+                        {s.due > 0 ? (
+                          <span className="text-accent-text">{s.due} due</span>
+                        ) : s.nextDueInDays !== null ? (
+                          formatDayDelta(s.nextDueInDays)
+                        ) : (
+                          "-"
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section aria-labelledby="companies" className="mt-12">

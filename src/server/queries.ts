@@ -4,6 +4,8 @@ import { db } from "@/db";
 import {
   companies,
   companyProblems,
+  customSheetItems,
+  customSheets,
   dailyActivity,
   leetcodeSubmissions,
   drillLogs,
@@ -14,12 +16,13 @@ import {
   sheets,
   userPatterns,
   userProblems,
+  type CustomSheet,
   type Difficulty,
   type User,
 } from "@/db/schema";
 import { retrievability, type CardColumns } from "@/lib/srs/fsrs";
 import { NEW_ESTIMATE_MINUTES, REVIEW_ESTIMATE_MINUTES } from "@/lib/srs/grade";
-import { buildReviewQueue } from "@/lib/srs/queue";
+import { buildReviewQueue, weakestFirst } from "@/lib/srs/queue";
 import { selectDrills } from "@/lib/srs/drills";
 import { patternMastery, roadmapStatus } from "@/lib/srs/mastery";
 import { addDaysToKey, dayKey, diffDayKeys, endOfLocalDay, startOfLocalDay } from "@/lib/time";
@@ -174,6 +177,138 @@ export async function getSheet(slug: string, user: User, now: Date) {
     section.problems.push(toProblemRow(row, user, now));
   }
   return { sheet, sections };
+}
+
+/* ------------------------------------------------------------------ custom sheets */
+
+/** Card columns of custom_sheet_items. Their memory is separate from user_problems. */
+const customCardCols = {
+  due: customSheetItems.due,
+  stability: customSheetItems.stability,
+  difficulty: customSheetItems.difficulty,
+  elapsedDays: customSheetItems.elapsedDays,
+  scheduledDays: customSheetItems.scheduledDays,
+  learningSteps: customSheetItems.learningSteps,
+  reps: customSheetItems.reps,
+  lapses: customSheetItems.lapses,
+  state: customSheetItems.state,
+  lastReview: customSheetItems.lastReview,
+};
+
+export type CustomItemRow = {
+  id: number;
+  sheetId: number;
+  url: string;
+  title: string;
+  difficulty: Difficulty;
+  insight: string | null;
+  solvedAt: Date;
+  /** Local day the item was first logged, for grouping ("YYYY-MM-DD"). */
+  solvedOn: string;
+  due: Date;
+  reps: number;
+  lapses: number;
+  r: number;
+  /** Local-day difference until the next review; negative when overdue. */
+  dueInDays: number;
+};
+
+function toCustomItemRow(
+  row: { id: number; sheetId: number; url: string; title: string; level: Difficulty; insight: string | null; solvedAt: Date } & CardColumns,
+  sheet: CustomSheet,
+  user: User,
+  now: Date,
+): CustomItemRow {
+  const today = dayKey(now, user.timezone);
+  return {
+    id: row.id,
+    sheetId: row.sheetId,
+    url: row.url,
+    title: row.title,
+    difficulty: row.level,
+    insight: row.insight,
+    solvedAt: row.solvedAt,
+    solvedOn: dayKey(row.solvedAt, user.timezone),
+    due: row.due,
+    reps: row.reps,
+    lapses: row.lapses,
+    r: retrievability(row, now, sheet.desiredRetention),
+    dueInDays: diffDayKeys(today, dayKey(row.due, user.timezone)),
+  };
+}
+
+const customItemSelect = {
+  id: customSheetItems.id,
+  sheetId: customSheetItems.sheetId,
+  url: customSheetItems.url,
+  title: customSheetItems.title,
+  level: customSheetItems.level,
+  insight: customSheetItems.insight,
+  solvedAt: customSheetItems.solvedAt,
+  ...customCardCols,
+};
+
+/** The viewer's own sheets with per-sheet counts, each measured against its own recall target. */
+export async function getCustomSheetIndex(user: User, now: Date) {
+  const list = await db
+    .select()
+    .from(customSheets)
+    .where(eq(customSheets.userId, user.id))
+    .orderBy(desc(customSheets.createdAt));
+  if (list.length === 0) return [];
+  const rows = await db.select(customItemSelect).from(customSheetItems).where(eq(customSheetItems.userId, user.id));
+  const bySheet = new Map(list.map((s) => [s.id, s]));
+  const stats = new Map<number, { total: number; due: number; sum: number; nextDueInDays: number | null }>();
+  for (const row of rows) {
+    const sheet = bySheet.get(row.sheetId);
+    if (!sheet) continue;
+    const item = toCustomItemRow(row, sheet, user, now);
+    const acc = stats.get(sheet.id) ?? { total: 0, due: 0, sum: 0, nextDueInDays: null };
+    acc.total += 1;
+    acc.sum += item.r;
+    if (item.dueInDays <= 0) acc.due += 1;
+    else acc.nextDueInDays = acc.nextDueInDays === null ? item.dueInDays : Math.min(acc.nextDueInDays, item.dueInDays);
+    stats.set(sheet.id, acc);
+  }
+  return list.map((sheet) => {
+    const s = stats.get(sheet.id);
+    return {
+      ...sheet,
+      total: s?.total ?? 0,
+      due: s?.due ?? 0,
+      retention: s?.total ? s.sum / s.total : null,
+      nextDueInDays: s?.nextDueInDays ?? null,
+    };
+  });
+}
+
+/** One of the viewer's sheets, newest solves first, plus its own review queue (weakest first). */
+export async function getCustomSheet(id: number, user: User, now: Date) {
+  const [sheet] = await db
+    .select()
+    .from(customSheets)
+    .where(and(eq(customSheets.id, id), eq(customSheets.userId, user.id)))
+    .limit(1);
+  if (!sheet) return null;
+  const rows = await db
+    .select(customItemSelect)
+    .from(customSheetItems)
+    .where(and(eq(customSheetItems.sheetId, sheet.id), eq(customSheetItems.userId, user.id)))
+    .orderBy(desc(customSheetItems.solvedAt), desc(customSheetItems.id));
+  const items = rows.map((r) => toCustomItemRow(r, sheet, user, now));
+  const queue = weakestFirst(items.filter((i) => i.dueInDays <= 0));
+  return { sheet, items, queue };
+}
+
+/** A single item with its full card and its sheet, for the review screen. */
+export async function getCustomReviewItem(sheetId: number, itemId: number, user: User) {
+  const [row] = await db
+    .select({ item: customSheetItems, sheet: customSheets })
+    .from(customSheetItems)
+    .innerJoin(customSheets, eq(customSheets.id, customSheetItems.sheetId))
+    .where(and(eq(customSheetItems.id, itemId), eq(customSheetItems.sheetId, sheetId), eq(customSheetItems.userId, user.id)))
+    .limit(1);
+  return row ?? null;
 }
 
 /* ------------------------------------------------------------------ companies */

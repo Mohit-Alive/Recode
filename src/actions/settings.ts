@@ -5,7 +5,7 @@ import { refresh } from "next/cache";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { dailyActivity, drillLogs, reviewLogs, sheets, userPatterns, userProblems, users } from "@/db/schema";
+import { customSheetItems, dailyActivity, drillLogs, reviewLogs, sheets, userPatterns, userProblems, users } from "@/db/schema";
 import { isValidTimeZone } from "@/lib/time";
 import { requireUser } from "@/server/auth";
 import { TIME_OFFSET_COOKIE } from "@/server/clock";
@@ -60,6 +60,8 @@ export async function resetAllProgress() {
   await db.delete(drillLogs).where(eq(drillLogs.userId, user.id));
   await db.delete(userProblems).where(eq(userProblems.userId, user.id));
   await db.delete(userPatterns).where(eq(userPatterns.userId, user.id));
+  // Custom sheets stay (empty); their items and review logs (cascade) go.
+  await db.delete(customSheetItems).where(eq(customSheetItems.userId, user.id));
   await db.delete(dailyActivity).where(eq(dailyActivity.userId, user.id));
   await db
     .update(users)

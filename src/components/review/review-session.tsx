@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, ArrowUpRight, CaretLeft, Check, Lightbulb, X } from "@phosphor-icons/react/ssr";
 import { toast } from "sonner";
 import { submitReview } from "@/actions/review";
+import { submitCustomReview } from "@/actions/custom-sheets";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Switch } from "@/components/ui/switch";
@@ -36,6 +37,9 @@ type Props = {
   lapses: number;
   remaining: number;
   nextHref: string;
+  /** Set when reviewing an item of a custom sheet: saves to that sheet's own memory. */
+  customItemId?: number;
+  back?: { href: string; label: string };
 };
 
 export function ReviewSession(props: Props) {
@@ -107,17 +111,19 @@ export function ReviewSession(props: Props) {
     (grade: Grade) => {
       if (pending) return;
       startTransition(async () => {
-        const res = await submitReview({
-          problemId: problem.id,
+        const signals = {
           grade,
           solved,
           viewedSolution,
           hintUsed,
           wrongSubmissions: wrong,
           seconds,
-          patternGuessId: guess,
           insight: insight.trim() && insight.trim() !== (problem.insight ?? "") ? insight.trim() : undefined,
-        });
+        };
+        const res =
+          props.customItemId !== undefined
+            ? await submitCustomReview(props.customItemId, signals)
+            : await submitReview({ ...signals, problemId: problem.id, patternGuessId: guess });
         if (!res.ok) {
           toast.error(res.error);
           return;
@@ -126,7 +132,7 @@ export function ReviewSession(props: Props) {
         go("done");
       });
     },
-    [pending, problem.id, problem.insight, solved, viewedSolution, hintUsed, wrong, seconds, guess, insight, go],
+    [pending, problem.id, problem.insight, props.customItemId, solved, viewedSolution, hintUsed, wrong, seconds, guess, insight, go],
   );
 
   // Keyboard: 1-4 rate on the rating step, Enter advances on the done step.
@@ -157,8 +163,8 @@ export function ReviewSession(props: Props) {
   return (
     <div ref={topRef} className="mx-auto w-full max-w-[720px] px-4 py-8 sm:px-8 sm:py-10">
       <div className="flex items-center justify-between text-[13px] text-ink-subtle">
-        <Link href="/today" className="inline-flex items-center gap-1 hover:text-ink">
-          <CaretLeft size={13} aria-hidden /> Today
+        <Link href={props.back?.href ?? "/today"} className="inline-flex items-center gap-1 hover:text-ink">
+          <CaretLeft size={13} aria-hidden /> {props.back?.label ?? "Today"}
         </Link>
         <span className="font-mono text-[12px] tabular">{props.remaining > 0 ? `${props.remaining} more after this` : "Last one"}</span>
       </div>
@@ -189,27 +195,29 @@ export function ReviewSession(props: Props) {
           {step === "recall" ? (
             <section aria-labelledby="recall-h">
               <h2 id="recall-h" className="text-[15px] font-semibold tracking-tight">
-                Before you open it, which pattern solves it?
+                {patterns.length > 0 ? "Before you open it, which pattern solves it?" : "Before you open it, how would you solve it?"}
               </h2>
               <p className="mt-1 text-[13px] text-ink-subtle">Answer from memory. Retrieval is the workout; peeking skips it.</p>
-              <div className="mt-4 grid grid-cols-2 gap-1.5 sm:grid-cols-3" role="radiogroup" aria-label="Pattern">
-                {patterns.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={guess === p.id}
-                    onClick={() => setGuess(guess === p.id ? null : p.id)}
-                    className={cn(
-                      "h-9 truncate rounded-md border px-3 text-left text-[13px] transition-colors",
-                      guess === p.id ? "border-accent bg-surface-2 text-ink" : "border-line bg-surface-1 text-ink-muted hover:border-line-strong hover:text-ink",
-                    )}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-              <label htmlFor="approach" className="mt-6 block text-[13px] font-medium text-ink-muted">
+              {patterns.length > 0 ? (
+                <div className="mt-4 grid grid-cols-2 gap-1.5 sm:grid-cols-3" role="radiogroup" aria-label="Pattern">
+                  {patterns.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={guess === p.id}
+                      onClick={() => setGuess(guess === p.id ? null : p.id)}
+                      className={cn(
+                        "h-9 truncate rounded-md border px-3 text-left text-[13px] transition-colors",
+                        guess === p.id ? "border-accent bg-surface-2 text-ink" : "border-line bg-surface-1 text-ink-muted hover:border-line-strong hover:text-ink",
+                      )}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <label htmlFor="approach" className={cn("block text-[13px] font-medium text-ink-muted", patterns.length > 0 ? "mt-6" : "mt-4")}>
                 Sketch the approach <span className="font-normal text-ink-subtle">(optional, stays on this page)</span>
               </label>
               <Textarea
@@ -300,24 +308,26 @@ export function ReviewSession(props: Props) {
                 Compare with what you knew
               </h2>
               <dl className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface-1">
-                <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-start sm:gap-6">
-                  <dt className="w-28 shrink-0 text-[13px] text-ink-subtle">Pattern</dt>
-                  <dd className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 text-[14px] text-ink">
-                      {patternName ?? "Unlabelled"}
-                      {guessCorrect === true ? (
-                        <span className="inline-flex items-center gap-1 text-[12px] text-strong">
-                          <Check size={12} weight="bold" aria-hidden /> You called it
-                        </span>
-                      ) : guessCorrect === false ? (
-                        <span className="inline-flex items-center gap-1 text-[12px] text-risk">
-                          <X size={12} weight="bold" aria-hidden /> You guessed {patterns.find((p) => p.id === guess)?.name}
-                        </span>
-                      ) : null}
-                    </p>
-                    {patternCue ? <p className="mt-1 text-[13px] leading-relaxed text-ink-subtle">Cue: {patternCue}</p> : null}
-                  </dd>
-                </div>
+                {patterns.length > 0 ? (
+                  <div className="flex flex-col gap-1 p-4 sm:flex-row sm:items-start sm:gap-6">
+                    <dt className="w-28 shrink-0 text-[13px] text-ink-subtle">Pattern</dt>
+                    <dd className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-[14px] text-ink">
+                        {patternName ?? "Unlabelled"}
+                        {guessCorrect === true ? (
+                          <span className="inline-flex items-center gap-1 text-[12px] text-strong">
+                            <Check size={12} weight="bold" aria-hidden /> You called it
+                          </span>
+                        ) : guessCorrect === false ? (
+                          <span className="inline-flex items-center gap-1 text-[12px] text-risk">
+                            <X size={12} weight="bold" aria-hidden /> You guessed {patterns.find((p) => p.id === guess)?.name}
+                          </span>
+                        ) : null}
+                      </p>
+                      {patternCue ? <p className="mt-1 text-[13px] leading-relaxed text-ink-subtle">Cue: {patternCue}</p> : null}
+                    </dd>
+                  </div>
+                ) : null}
                 {approach.trim() ? (
                   <div className="flex flex-col gap-1 p-4 sm:flex-row sm:gap-6">
                     <dt className="w-28 shrink-0 text-[13px] text-ink-subtle">Your sketch</dt>

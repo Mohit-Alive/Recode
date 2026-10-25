@@ -27,22 +27,27 @@ export type CardColumns = {
   lastReview: Date | null;
 };
 
-const schedulers = new Map<number, FSRS>();
+const schedulers = new Map<string, FSRS>();
+
+export const MAX_INTERVAL_DAYS = 365;
 
 /**
  * A scheduler tuned for re-solving problems rather than flipping flashcards:
  * - day granularity (no minute-level learning steps: a re-solve takes 20 minutes, not 10 seconds)
  * - fuzz on, so problems solved together do not all come due on the same day
- * - intervals capped at a year so nothing disappears before an interview cycle
+ * - intervals capped (a year by default; custom sheets can choose a shorter cap) so nothing
+ *   disappears before an interview cycle
  */
-export function scheduler(desiredRetention = 0.9): FSRS {
-  const key = Math.round(desiredRetention * 100);
+export function scheduler(desiredRetention = 0.9, maxInterval = MAX_INTERVAL_DAYS): FSRS {
+  const retention = Math.round(desiredRetention * 100);
+  const cap = Math.max(1, Math.round(maxInterval));
+  const key = `${retention}:${cap}`;
   let f = schedulers.get(key);
   if (!f) {
     f = fsrs(
       generatorParameters({
-        request_retention: key / 100,
-        maximum_interval: 365,
+        request_retention: retention / 100,
+        maximum_interval: cap,
         enable_fuzz: true,
         enable_short_term: false,
       }),
@@ -126,19 +131,35 @@ export const GRADE_LABEL: Record<Grade, string> = {
 };
 
 /** Next interval (in days) for each grade, for previewing on the rating keycaps. */
-export function previewIntervals(row: CardColumns | null, now: Date, desiredRetention = 0.9): Record<Grade, number> {
-  const f = scheduler(desiredRetention);
+export function previewIntervals(
+  row: CardColumns | null,
+  now: Date,
+  desiredRetention = 0.9,
+  maxInterval = MAX_INTERVAL_DAYS,
+): Record<Grade, number> {
+  const f = scheduler(desiredRetention, maxInterval);
   const preview = f.repeat(row ? toCard(row) : newCard(now), now);
   const out = {} as Record<Grade, number>;
   for (const g of GRADES) {
-    out[g] = Math.max(1, Math.round((preview[g].card.due.getTime() - now.getTime()) / 86_400_000));
+    const card = capInterval(preview[g].card, now, maxInterval);
+    out[g] = Math.max(1, Math.round((card.due.getTime() - now.getTime()) / 86_400_000));
   }
   return out;
 }
 
 /** Applies a grade to a card (or to a brand-new card when `row` is null). */
-export function schedule(row: CardColumns | null, now: Date, grade: Grade, desiredRetention = 0.9) {
-  const f = scheduler(desiredRetention);
+export function schedule(row: CardColumns | null, now: Date, grade: Grade, desiredRetention = 0.9, maxInterval = MAX_INTERVAL_DAYS) {
+  const f = scheduler(desiredRetention, maxInterval);
   const { card, log } = f.next(row ? toCard(row) : newCard(now), now, grade);
-  return { card: fromCard(card), log: fromLog(log) };
+  return { card: fromCard(capInterval(card, now, maxInterval)), log: fromLog(log) };
+}
+
+/**
+ * ts-fsrs keeps Easy > Good > Hard by bumping each a day past the one below *after* applying
+ * `maximum_interval`, so a short cap can be overshot by a day or two. Clamp so the cap is a promise.
+ */
+function capInterval(card: Card, now: Date, maxInterval: number): Card {
+  const cap = Math.max(1, Math.round(maxInterval));
+  if (card.scheduled_days <= cap) return card;
+  return { ...card, scheduled_days: cap, due: new Date(now.getTime() + cap * 86_400_000) };
 }

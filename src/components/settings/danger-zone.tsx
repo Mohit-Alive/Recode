@@ -14,7 +14,7 @@ export function DangerZone() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="max-w-[48ch] text-[13px] text-ink-subtle">Delete every solved problem, review, drill and streak. Settings stay.</p>
+        <p className="max-w-[48ch] text-[13px] text-ink-subtle">Delete every solved problem, review, drill and streak, including problems logged in your own sheets. Your sheets and settings stay.</p>
         <Button variant="danger" onClick={() => setOpen(true)}>
           Reset Progress
         </Button>

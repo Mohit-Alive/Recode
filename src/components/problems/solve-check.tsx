@@ -12,7 +12,7 @@ import { formatDayDelta } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Grade } from "@/lib/srs/fsrs";
 
-const FIRST_SOLVE_OPTIONS: { grade: Grade; label: string; hint: string }[] = [
+export const FIRST_SOLVE_OPTIONS: { grade: Grade; label: string; hint: string }[] = [
   { grade: 1, label: "Needed help", hint: "Looked at the solution" },
   { grade: 2, label: "Struggled", hint: "Got there slowly" },
   { grade: 3, label: "Solid", hint: "Solved it myself" },
